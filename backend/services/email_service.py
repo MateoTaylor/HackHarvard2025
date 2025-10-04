@@ -4,6 +4,8 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from config import logger
 import os
+import pathlib
+import json
 
 
 # Email configuration - you should set these as environment variables
@@ -12,6 +14,8 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "your-email@example.com")
 SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "your-app-password")
 COMPANY_NAME = os.getenv("COMPANY_NAME", "SecurePayments")
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "smtp")  # 'smtp' or 'file'
+EMAIL_FILE_PATH = os.getenv("EMAIL_FILE_PATH", "tmp_emails")
 
 
 def send_email(to_email, subject, html_content, text_content=None):
@@ -35,6 +39,26 @@ def send_email(to_email, subject, html_content, text_content=None):
         - Falls back to text content if HTML is not supported.
     """
     try:
+        # Dev: file backend — write message JSON to disk instead of sending
+        if EMAIL_BACKEND == "file":
+            out_dir = pathlib.Path(EMAIL_FILE_PATH)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S%fZ")
+            filename = out_dir / f"email_{timestamp}.json"
+            payload = {
+                "from": SENDER_EMAIL,
+                "to": to_email,
+                "subject": subject,
+                "text": text_content,
+                "html": html_content,
+                "company": COMPANY_NAME,
+                "created_at": datetime.utcnow().isoformat() + "Z",
+            }
+            with open(filename, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2)
+            logger.info(f"Email written to file backend: {filename}")
+            return True
+
         # Create message
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
@@ -52,10 +76,33 @@ def send_email(to_email, subject, html_content, text_content=None):
 
 
         # Send email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.sendmail(SENDER_EMAIL, to_email, message.as_string())
+        # Support two common modes:
+        # - SMTPS (implicit SSL) on port 465 -> smtplib.SMTP_SSL
+        # - SMTP + STARTTLS (explicit TLS) on port 587 (or other) -> smtplib.SMTP + starttls()
+        if SMTP_PORT == 465:
+            # Implicit SSL
+            with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+                try:
+                    server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                except smtplib.SMTPAuthenticationError as auth_err:
+                    logger.error(f"SMTP authentication failed (code={getattr(auth_err,'smtp_code',None)}): {getattr(auth_err,'smtp_error',auth_err)}")
+                    raise
+                server.sendmail(SENDER_EMAIL, to_email, message.as_string())
+        else:
+            # Start with plain SMTP and then upgrade to TLS
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+                server.ehlo()
+                try:
+                    server.starttls()
+                    server.ehlo()
+                except Exception as tls_err:
+                    logger.warning(f"Could not start TLS: {tls_err}")
+                try:
+                    server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                except smtplib.SMTPAuthenticationError as auth_err:
+                    logger.error(f"SMTP authentication failed (code={getattr(auth_err,'smtp_code',None)}): {getattr(auth_err,'smtp_error',auth_err)}")
+                    raise
+                server.sendmail(SENDER_EMAIL, to_email, message.as_string())
 
 
         logger.info(f"Email sent successfully to {to_email}")
