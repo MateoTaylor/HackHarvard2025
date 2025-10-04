@@ -33,8 +33,11 @@ const App: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Lightly sanitize card number (remove spaces) but do not perform strict validation
-      const sanitizedCardNumber = formData.cardNumber.replace(/\s+/g, '');
+      // Clean and sanitize all formatted fields before sending to backend
+      const sanitizedCardNumber = formData.cardNumber.replace(/\s+/g, ''); // Remove spaces
+      const sanitizedExpiryDate = formData.expiryDate.replace(/\D/g, ''); // Remove slash, keep only digits
+      const sanitizedCvv = formData.cvv.replace(/\D/g, ''); // Keep only digits
+      const sanitizedZipCode = formData.address.replace(/\D/g, ''); // Keep only digits
 
       // Fixed device information (static for demo/testing)
       const deviceInfo = {
@@ -48,7 +51,11 @@ const App: React.FC = () => {
 
       const payload = {
         ...formData,
-        cardNumber: sanitizedCardNumber, // Overwrite the existing field
+        // Override formatted fields with clean data
+        cardNumber: sanitizedCardNumber,
+        expiryDate: sanitizedExpiryDate,
+        cvv: sanitizedCvv,
+        address: sanitizedZipCode,
         // Add default backend fields
         merchant_id: "demo_merchant",
         api_key: "sk_test_demo_key_12345",
