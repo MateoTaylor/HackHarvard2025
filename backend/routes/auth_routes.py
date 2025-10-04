@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from services.auth_service import initialize_challenge_service, verify_challenge_service
+from services.auth_service import initialize_challenge_service, verify_challenge_service, send_mfa_request_service
 from services.health_service import health_check_service
 
 # Define Blueprint for auth routes
@@ -12,6 +12,10 @@ def health_check():
 @auth_routes.route('/authpay/init', methods=['POST'])
 def initialize_challenge():
     return initialize_challenge_service(request)
+
+@auth_routes.route('/authpay/send', methods=['POST'])
+def send_mfa_request():
+    return send_mfa_request_service(request)
 
 @auth_routes.route('/authpay/verify', methods=['POST'])
 def verify_challenge():
