@@ -1,42 +1,210 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f7f7f8;
+  margin: 0;
+  padding: 20px;
+
+  /* center the App container vertically and horizontally */
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.App {
+  max-width: 420px;
+  margin: 0; /* removed top margin so flex centering takes effect */
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  padding: 20px;
+}
+
+header h1 {
+  font-size: 22px;
+  margin: 0 0 10px 0;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+input[type="text"], input[type="email"], input[type="number"] {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+}
+
+button {
+  padding: 12px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.small {
+  font-size: 12px;
+  color: #666;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.mfa-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 2000;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.mfa-spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 6px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.mfa-message {
+  color: #fff;
+  margin-top: 12px;
+  font-weight: 500;
 }
 
-.card {
-  padding: 2em;
+/* MFA options popup styles */
+.mfa-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
 }
 
-.read-the-docs {
-  color: #888;
+.mfa-popup {
+  width: 720px;
+  max-width: 95%;
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.mfa-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.mfa-title {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+  color: #111;
+}
+
+.mfa-sub {
+  margin: 0 0 16px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.mfa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.mfa-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
+  border-radius: 10px;
+  border: 1px solid #eef2ff;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.mfa-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mfa-method {
+  font-weight: 700;
+  color: #2b2b2b;
+}
+
+.mfa-device {
+  margin-top: 10px;
+}
+
+.mfa-device-name {
+  font-size: 14px;
+  color: #111;
+  font-weight: 600;
+}
+
+.mfa-device-phone {
+  font-size: 13px;
+  color: #666;
+}
+
+.mfa-card-footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.mfa-choose {
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #6b8cff, #7b5cff);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.mfa-choose:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mfa-cancel {
+  background: transparent;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mfa-device-empty {
+  color: #aaa;
+  font-size: 13px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

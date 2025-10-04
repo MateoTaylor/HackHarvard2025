@@ -3,6 +3,8 @@ import './App.css';
 import PaymentAmount from './components/PaymentAmount';
 import CardDetailsForm from './components/CardDetailsForm';
 import CheckoutButton from './components/CheckoutButton';
+import { startMFA } from './components/MFA';
+import MFAOverlay from './components/MFAOverlay';
 
 const App: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +18,8 @@ const App: React.FC = () => {
   });
 
   const [mfaRequired, setMfaRequired] = useState(false); // Track MFA requirement
+  const [mfaPending, setMfaPending] = useState(false); // Show spinner overlay while starting MFA
+  const [mfaSelection, setMfaSelection] = useState<{ method: string; device: any } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -26,24 +30,36 @@ const App: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5001/authpay/init', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      console.log('Response:', data);
+      // Lightly sanitize card number (remove spaces) but do not perform strict validation
+      const sanitizedCardNumber = formData.cardNumber.replace(/\s+/g, '');
 
-      if (data.mfa_required) {
-        setMfaRequired(true); // Set MFA required state
-        window.location.href = data.duo_auth_url.auth_url; // Redirect to Duo auth page
+      const payload = {
+        ...formData,
+        card_number: sanitizedCardNumber,
+      };
+
+      // Show overlay while MFA starts
+      setMfaPending(true);
+
+      // Delegate MFA logic to startMFA helper
+      const result = await startMFA(payload);
+      console.log('MFA result:', result);
+
+      // If user selected a method/device, store it and set MFA required
+      if (result && result.selection) {
+        setMfaSelection(result.selection);
+        setMfaRequired(true);
+        console.log('User selected method:', result.selection.method, 'device:', result.selection.device);
       } else {
-        setMfaRequired(false); // Clear MFA required state
-        console.log('Authentication successful.');
+        // No selection -> leave as-is or handle direct success
+        setMfaSelection(null);
+        setMfaRequired(false);
       }
+
+      setMfaPending(false);
+
     } catch (error) {
+      setMfaPending(false);
       console.error('Error:', error);
       alert('Authentication failed. Please try again.');
     }
@@ -72,6 +88,7 @@ const App: React.FC = () => {
         alignItems: 'center',
       }}
     >
+      <MFAOverlay visible={mfaPending} />
       <header
         style={{
           textAlign: 'center',
@@ -125,6 +142,13 @@ const App: React.FC = () => {
         <CardDetailsForm formData={formData} onChange={handleChange} />
         <CheckoutButton amount={formData.amount} disabled={mfaRequired} />
       </form>
+
+      {mfaSelection && (
+        <div style={{ marginTop: 12, textAlign: 'center' }}>
+          <strong>MFA Method:</strong> {mfaSelection.method} <br />
+          <strong>Device:</strong> {mfaSelection.device?.display_name || mfaSelection.device?.name || mfaSelection.device?.number}
+        </div>
+      )}
     </div>
   );
 };
