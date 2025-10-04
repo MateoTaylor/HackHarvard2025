@@ -31,6 +31,7 @@ Purchase Record (last 6 months):
 '''
 
 import os
+import certifi
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -54,6 +55,8 @@ class Database:
         try:
             self.client = MongoClient(
                 mongo_uri,
+                tls=True,
+                tlsCAFile=certifi.where(),
                 serverSelectionTimeoutMS=5000,
                 connectTimeoutMS=5000,
                 socketTimeoutMS=5000,
