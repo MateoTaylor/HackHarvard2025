@@ -46,7 +46,10 @@ def initialize_challenge_service(request):
             return jsonify({"error": "Invalid merchant credentials"}), 401
 
         # Validate currency
-        currency = data['currency'].upper()
+        currency = data.get('currency')
+        if not isinstance(currency, str):
+            return jsonify({"error": "Invalid currency format"}), 400
+        currency = currency.upper()
         if currency not in SUPPORTED_CURRENCIES:
             return jsonify({
                 "error": "Unsupported currency",

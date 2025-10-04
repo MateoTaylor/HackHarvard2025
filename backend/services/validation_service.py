@@ -43,11 +43,11 @@ def should_require_mfa(amount, currency, geo, device_info, email):
         return True, "high_amount"
 
     # Rule 3: High-risk countries
-    if geo and geo.upper() in HIGH_RISK_COUNTRIES:
+    if geo and isinstance(geo, str) and geo.upper() in HIGH_RISK_COUNTRIES:
         return True, "high_risk_location"
 
     # Rule 2: Non-US transactions (example geographic rule)
-    if geo and geo.upper() != "US":
+    if geo and isinstance(geo, str) and geo.upper() != "US":
         return True, "foreign_transaction"
 
     # Rule 4: Suspicious device information (placeholder)
