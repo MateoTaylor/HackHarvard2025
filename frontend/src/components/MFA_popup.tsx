@@ -74,7 +74,18 @@ export default function MFAOptionsPopup({
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 12 }}>
-          <button className="mfa-cancel" onClick={() => onClose?.()}>
+          <button
+            className="mfa-cancel"
+            style={{
+              backgroundColor: '#ff4d4d',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 12px',
+              cursor: 'pointer',
+            }}
+            onClick={() => onClose?.()}
+          >
             Cancel
           </button>
         </div>
