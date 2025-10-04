@@ -249,24 +249,3 @@ class DuoAuthService:
             return False
 
 
-# Testing
-if __name__ == "__main__":
-    # Example usage
-    duo_service = DuoAuthService()
-    
-    # Create auth URL for a user
-    result = duo_service.create_auth_url(
-        username="sushmit",
-        transaction_data={
-            "amount": "150.00",
-            "description": "Payment to Vendor ABC"
-        }
-    )
-    
-    print("Auth URL:", result['auth_url'])
-    print("Transaction ID:", result['transaction_id'])
-    
-    # Simulate checking status
-    status = duo_service.get_transaction_status(result['transaction_id'])
-    print("Status:", status)
-
