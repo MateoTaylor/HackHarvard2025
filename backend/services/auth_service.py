@@ -7,6 +7,13 @@ from config import active_challenges, CHALLENGE_EXPIRY_MINUTES, SUPPORTED_CURREN
 from config import DEFAULT_MERCHANT_ID, DEFAULT_API_KEY, DEFAULT_CURRENCY, DEFAULT_EMAIL, AMOUNT_THRESHOLD
 from services.auth_duo import DuoAuthService
 
+from services.email_service import (
+    send_transaction_success_email,
+    send_fraud_alert_email,
+    send_mfa_required_email
+)
+
+
 def initialize_challenge_service(request):
     """
     Initialize a challenge for multi-factor authentication (MFA).
@@ -101,6 +108,15 @@ def initialize_challenge_service(request):
         }
 
         active_challenges[challenge_id] = challenge_info
+        
+        # Send email notifications
+        if mfa_required:
+            # Send MFA required notification
+            send_mfa_required_email(data['email'], challenge_info)
+           
+            # If it's a high-risk reason, also send fraud alert
+            if reason in ["high_risk_location", "suspicious_email", "new_device"]:
+                send_fraud_alert_email(data['email'], challenge_info, reason)
 
         # Prepare response
         response = {
@@ -194,6 +210,8 @@ def verify_challenge_service(request):
 
         if verification_result:
             logger.info(f"Challenge verified successfully: {challenge_id}")
+            # Send success email after verification
+            send_transaction_success_email(challenge['email'], challenge)
             return jsonify({
                 "allow": True,
                 "challenge_id": challenge_id,
