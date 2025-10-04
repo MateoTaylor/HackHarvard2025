@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
+import MFAOptionsPopup from './MFA_popup';
 
 // Simple MFA helper module
 // Exports a startMFA function that sends the payload to the backend
 // and handles Duo redirect when needed. Designed to be imported by any app.
 
 export type MFASelection = { method: string; device: any } | null;
-export async function startMFA(payload: Record<string, any>, options?: { endpoint?: string }) {
+export async function startMFA(payload: Record<string, any>, options?: { endpoint?: string; sendEndpoint?: string }) {
     const endpoint = options?.endpoint || 'http://localhost:5001/authpay/init';
 
     try {
@@ -26,6 +27,28 @@ export async function startMFA(payload: Record<string, any>, options?: { endpoin
             const selection = await showMFAOptions(data.auth_method);
             // selection is {method, device} or null if cancelled
             console.log('User selected MFA option:', selection);
+            if (selection) {
+                // Call the new selection endpoint to trigger actual Duo auth
+                const sendEndpoint = options?.sendEndpoint || 'http://localhost:5001/authpay/send';
+                try {
+                    const sendRes = await fetch(sendEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            method: selection.method,
+                            username: payload.email || 'testuser' // Use email from payload or fallback
+                        }),
+                    });
+                    
+                    const sendData = await sendRes.json();
+                    console.log('MFA send response:', sendData);
+                    
+                    return { redirected: false, data, selection, sendResult: sendData };
+                } catch (sendErr) {
+                    console.error('Error sending MFA request:', sendErr);
+                    return { redirected: false, data, selection, sendError: sendErr };
+                }
+            }
             return { redirected: false, data, selection };
         }
 
@@ -39,13 +62,6 @@ export async function startMFA(payload: Record<string, any>, options?: { endpoin
 
 // React popup component
 type AuthMethodsProp = Record<string, any> | any[];
-
-const methodLabelMap: Record<string, string> = {
-    push: 'Push Notification',
-    sms: 'SMS',
-    phone: 'Phone Call',
-    passcode: 'Passcode',
-};
 
 function deriveMethodsFromAuth(authMethod: any) {
     // Normalize several possible shapes into an array of { method, devices }
@@ -86,78 +102,6 @@ function deriveMethodsFromAuth(authMethod: any) {
 
     return [];
 }
-
-const MFAOptionsPopup: React.FC<{
-    methods: Array<{ method: string; devices: any[] }>;
-    onClose?: () => void;
-    onSelect?: (method: string, device: any) => void;
-}> = ({ methods, onClose, onSelect }) => {
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose?.();
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [onClose]);
-
-    return (
-        <div className="mfa-popup-overlay">
-            <div className="mfa-popup">
-                <button className="mfa-close" onClick={() => onClose?.()} aria-label="Close">
-                    ×
-                </button>
-                <h2 className="mfa-title">Verify your identity</h2>
-                <p className="mfa-sub">Choose a verification method to continue</p>
-
-                <div className="mfa-grid">
-                    {methods.map((m) => {
-                        const method = m.method || 'unknown';
-                        const devices = Array.isArray(m.devices) ? m.devices : m.devices ? [m.devices] : [];
-                        const top = devices[0] || null;
-                        const label = methodLabelMap[method] || method;
-
-                        return (
-                            <div key={method} className="mfa-card">
-                                <div className="mfa-card-header">
-                                    <div className="mfa-method">{label}</div>
-                                </div>
-
-                                <div className="mfa-card-body">
-                                    {top ? (
-                                        <div className="mfa-device">
-                                            <div className="mfa-device-name">
-                                                {top.display_name || top.display || top.name || top.number || top.device || 'Primary device'}
-                                            </div>
-                                            {top.number && <div className="mfa-device-phone">{top.number}</div>}
-                                        </div>
-                                    ) : (
-                                        <div className="mfa-device-empty">No device available</div>
-                                    )}
-                                </div>
-
-                                <div className="mfa-card-footer">
-                                    <button
-                                        className="mfa-choose"
-                                        onClick={() => onSelect?.(method, top)}
-                                        disabled={!top}
-                                    >
-                                        Use {label}
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div style={{ textAlign: 'center', marginTop: 12 }}>
-                    <button className="mfa-cancel" onClick={() => onClose?.()}>
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 export const showMFAOptions = (authMethod: AuthMethodsProp): Promise<MFASelection> => {
     return new Promise((resolve) => {

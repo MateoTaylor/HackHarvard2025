@@ -2,10 +2,9 @@ from datetime import datetime, timedelta
 import uuid
 from flask import jsonify
 from services.validation_service import validate_merchant_api_key, should_require_mfa
-from services.auth_methods import get_auth_method
 from config import active_challenges, CHALLENGE_EXPIRY_MINUTES, SUPPORTED_CURRENCIES, logger
 from config import DEFAULT_MERCHANT_ID, DEFAULT_API_KEY, DEFAULT_CURRENCY, DEFAULT_EMAIL, AMOUNT_THRESHOLD
-from services.auth_duo import DuoAuthService
+from services.auth2_duo import DuoAuthAPIService
 from services.database import Database
 
 from services.email_service import (
@@ -132,8 +131,9 @@ def initialize_challenge_service(request):
                 username = db.get_user_via_card(data.get('cardNumber'))
                 if username:
                     print("Found user for card:", username)
+                    DuoAuth = DuoAuthAPIService()
                     response["reason"] = reason
-                    response["auth_method"] = get_auth_method(username)
+                    response["auth_method"] = DuoAuth.preauth(username)
                 else:
                     response["reason"] = "Card not attached to a user"
                     response["auth_method"] = None
@@ -235,3 +235,50 @@ def verify_challenge_service(request):
     except Exception as e:
         logger.error(f"Error verifying challenge: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
+
+def send_mfa_request_service(request):
+    """
+    Send MFA request using the selected method and username.
+    
+    Args:
+        request (flask.Request): The HTTP request object containing JSON payload with:
+            - method (str): The MFA method selected (e.g., 'push', 'sms', 'phone')
+            - username (str): The username to send MFA request to
+            
+    Returns:
+        flask.Response: JSON response containing the Duo auth result
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['method', 'username']
+        for field in required_fields:
+            if field not in data:
+                logger.error(f"Missing required field: {field}")
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+        
+        method = data['method']
+        username = data['username']
+        
+        logger.info(f"Sending MFA request - Method: {method}, Username: {username}")
+        
+        # Initialize Duo Auth API service
+        duo_service = DuoAuthAPIService()
+        
+        # Send auth request using Duo
+        auth_response = duo_service.send_auth_request(username=username, factor=method)
+        
+        logger.info(f"Duo auth response: {auth_response}")
+        
+        return jsonify({
+            "success": True,
+            "method": method,
+            "username": username,
+            "duo_response": auth_response
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error sending MFA request: {str(e)}")
+        return jsonify({"error": f"Failed to send MFA request: {str(e)}"}), 500
