@@ -33,13 +33,12 @@ const App: React.FC = () => {
         },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
       console.log('Response:', data);
 
       if (data.mfa_required) {
         setMfaRequired(true); // Set MFA required state
-        console.log('Authentication required. Please complete MFA.');
+        window.location.href = data.duo_auth_url.auth_url; // Redirect to Duo auth page
       } else {
         setMfaRequired(false); // Clear MFA required state
         console.log('Authentication successful.');
