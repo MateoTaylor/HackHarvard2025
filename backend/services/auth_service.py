@@ -39,6 +39,45 @@ def initialize_challenge_service(request):
     """
     try:
         data = request.get_json()
+        logger.info(f"Received challenge initialization request: {data}")
+
+        # Extract real client IP from request headers
+        def get_client_ip(request):
+            # Check for IP in various headers (common proxy/load balancer headers)
+            if request.headers.get('X-Forwarded-For'):
+                # X-Forwarded-For can contain multiple IPs, get the first (original client)
+                return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+            elif request.headers.get('X-Real-IP'):
+                return request.headers.get('X-Real-IP')
+            elif request.headers.get('X-Client-IP'):
+                return request.headers.get('X-Client-IP')
+            else:
+                # Fallback to remote_addr (direct connection)
+                return request.remote_addr or '127.0.0.1'
+
+        client_ip = get_client_ip(request)
+        logger.info(f"Client IP detected: {client_ip}")
+
+        # Add/override geo information with real IP
+        if not data.get('geo'):
+            data['geo'] = {}
+        data['geo']['ip'] = client_ip
+        
+        # Try to get country from IP (optional enhancement)
+        try:
+            import requests
+            geo_response = requests.get(f'https://ipapi.co/{client_ip}/country_code/', timeout=2)
+            if geo_response.status_code == 200:
+                country_code = geo_response.text.strip()
+                if country_code and country_code != 'Undefined':
+                    data['geo']['country'] = country_code
+                else:
+                    data['geo']['country'] = 'US'  # Default fallback
+            else:
+                data['geo']['country'] = 'US'  # Default fallback
+        except Exception as geo_error:
+            logger.warning(f"Failed to get country for IP {client_ip}: {geo_error}")
+            data['geo']['country'] = 'US'  # Default fallback
 
         # Fill in default values for missing fields
         data['merchant_id'] = data.get('merchant_id', DEFAULT_MERCHANT_ID)
@@ -109,6 +148,25 @@ def initialize_challenge_service(request):
 
         active_challenges[challenge_id] = challenge_info
         
+        # Create purchase record in database
+        db = Database()
+        geo_data = data.get('geo', {})
+        device_data = data.get('device', {})
+        
+        purchase_record = db.create_purchase_record(
+            purchase_id=challenge_id,  # Use challenge_id as purchase_id
+            merchant_id=data['merchant_id'],
+            amount=data['amount'],
+            currency=currency,
+            geo=geo_data,
+            device_info=device_data,
+            email=data['email'],
+            username=None,  # Will be updated below when we find/create user
+            mfa_required=mfa_required,
+            reason=reason
+        )
+        logger.info(f"Created purchase record: {challenge_id} with geo: {geo_data} and device: {device_data}")
+        
         # Send email notifications
         if mfa_required:
             # Send MFA required notification
@@ -126,24 +184,71 @@ def initialize_challenge_service(request):
         }
         if mfa_required:
             # first try to access the card in the database to see if MFA exists for it
-            db = Database()
             if data.get('cardNumber'):
                 username = db.get_user_via_card(data.get('cardNumber'))
                 if username:
-                    print("Found user for card:", username)
+                    logger.info(f"Found user for card: {username}")
+                    
+                    # Update user's last seen info with current geo and device
+                    db.update_user_last_seen(username, data.get('geo', {}), data.get('device', {}))
+                    
+                    # Update purchase record with username
+                    db.purchases.update_one(
+                        {"purchase_id": challenge_id},
+                        {"$set": {"username": username}}
+                    )
+                    
                     response["username"] = username
                     DuoAuth = DuoAuthAPIService()
                     response["reason"] = reason
                     response["auth_method"] = DuoAuth.preauth(username)
                 else:
-                    response["reason"] = "Card not attached to a user"
-                    response["mfa_required"] = False
-                    response["auth_method"] = None
+                    # Card not found - create new user and card record
+                    logger.info("Card not found in database. Creating new user and card record.")
+                    
+                    # Create username from firstName, fallback to default if empty
+                    new_username = data.get('firstName', '').strip()
+                    if not new_username:
+                        new_username = f"user_{data.get('cardNumber', 'unknown')[-4:]}"  # Use last 4 digits
+                    
+                    # Use provided email or default
+                    email = data.get('email', DEFAULT_EMAIL)
+                    card_number = data.get('cardNumber')
+                    
+                    try:
+                        # Create user record with geo and device info
+                        user = db.create_user(new_username, email, card_number, 
+                                            data.get('geo', {}), data.get('device', {}))
+                        logger.info(f"Created user: {new_username}")
+                        
+                        # Create card record linking card to user
+                        card = db.create_card(card_number, new_username)
+                        logger.info(f"Created card record for user: {new_username}")
+                        
+                        # Update user's last seen info with current geo and device
+                        db.update_user_last_seen(new_username, data.get('geo', {}), data.get('device', {}))
+                        
+                        # Update purchase record with username
+                        db.purchases.update_one(
+                            {"purchase_id": challenge_id},
+                            {"$set": {"username": new_username}}
+                        )
+                        
+                        # Now proceed with MFA for the new user
+                        response["username"] = new_username
+                        DuoAuth = DuoAuthAPIService()
+                        response["reason"] = reason
+                        response["auth_method"] = DuoAuth.preauth(new_username)
+                        
+                    except Exception as create_error:
+                        logger.error(f"Error creating user/card: {create_error}")
+                        response["reason"] = "Failed to create user record"
+                        response["auth_method"] = None
             else:
                 response["reason"] = "No card information provided"
 
-        print("response:", response)
-        print("Initialized challenge:", challenge_info)  # Debug print
+        logger.info(f"Response: {response}")
+        logger.debug(f"Initialized challenge: {challenge_info}")
         return jsonify(response), 200
 
     except ValueError as e:

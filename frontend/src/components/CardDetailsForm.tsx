@@ -8,6 +8,7 @@ interface CardDetailsFormProps {
     firstName: string;
     lastName: string;
     address: string;
+    email: string;
   };
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -66,12 +67,24 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
         </div>
       </div>
       <div style={{ marginBottom: '15px' }}>
+        <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>Email address:</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="user@example.com"
+          value={formData.email}
+          onChange={onChange}
+          style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+        />
+      </div>
+      <div style={{ marginBottom: '15px' }}>
         <label htmlFor="address" style={{ display: 'block', marginBottom: '5px' }}>ZIP/Postal code:</label>
         <input
           type="text"
           id="address"
           name="address"
-          placeholder="123 Main St"
+          placeholder="12345"
           value={formData.address}
           onChange={onChange}
           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}

@@ -16,6 +16,7 @@ const App: React.FC = () => {
     firstName: '',
     lastName: '',
     address: '',
+    email: '',
   });
 
   const [mfaRequired, setMfaRequired] = useState(false); // Track MFA requirement
@@ -35,9 +36,26 @@ const App: React.FC = () => {
       // Lightly sanitize card number (remove spaces) but do not perform strict validation
       const sanitizedCardNumber = formData.cardNumber.replace(/\s+/g, '');
 
+      // Fixed device information (static for demo/testing)
+      const deviceInfo = {
+        ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        platform: "MacIntel",
+        language: "en-US"
+      };
+
+      // Geo info will be determined by backend from request headers
+      // Backend will extract real IP from X-Forwarded-For, X-Real-IP, or remote_addr
+
       const payload = {
         ...formData,
-        card_number: sanitizedCardNumber,
+        cardNumber: sanitizedCardNumber, // Overwrite the existing field
+        // Add default backend fields
+        merchant_id: "demo_merchant",
+        api_key: "sk_test_demo_key_12345",
+        currency: "USD",
+        email: formData.email || "user@example.com",
+        // Add device information (geo will be determined by backend from request headers)
+        device: deviceInfo
       };
 
       // Show overlay while MFA starts

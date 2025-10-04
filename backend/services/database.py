@@ -94,13 +94,18 @@ class Database:
         """Retrieve a merchant by ID"""
         return self.merchants.find_one({"merchant_id": merchant_id})
     
-    def create_user(self, username, email, card_info):
+    def create_user(self, username, email, card_info, geo=None, device_info=None):
         """Create a new user record"""
+        from datetime import datetime
         user = {
             "username": username,
             "email": email,
             "card_info": card_info,
-            "previous_purchases": []
+            "previous_purchases": [],
+            "created_at": datetime.now(),
+            "last_seen": datetime.now(),
+            "last_geo": geo or {},
+            "last_device": device_info or {}
         }
         result = self.users.insert_one(user)
         return user
@@ -116,13 +121,132 @@ class Database:
     
     def get_user_via_card(self, card_info):
         """Retrieve a user by card info"""
-        print("Looking up user for card:", card_info)
-        print("Cards collection contents:", list(self.cards.find()))
         card = self.cards.find_one({"card_info": str(card_info)})
         if card:
             user_id = card["user_id"]
             return user_id
         return None
+    
+    def create_purchase_record(self, purchase_id, merchant_id, amount, currency, geo, device_info, email, username, mfa_required=False, reason=None):
+        """Create a new purchase record"""
+        from datetime import datetime
+        purchase = {
+            "purchase_id": purchase_id,
+            "merchant_id": merchant_id,
+            "amount": float(amount),
+            "currency": currency,
+            "geo": geo or {},
+            "device_info": device_info or {},
+            "email": email,
+            "username": username,
+            "timestamp_requested": datetime.now(),
+            "mfa_required": mfa_required,
+            "mfa_successful": None,  # Will be updated later
+            "timestamp_approved": None,  # Will be updated later
+            "reason": reason
+        }
+        
+        # Create purchases collection if it doesn't exist
+        if not hasattr(self, 'purchases'):
+            self.purchases = self.db.purchases
+        
+        self.purchases.insert_one(purchase)
+        return purchase
+    
+    def update_user_last_seen(self, username, geo, device_info):
+        """Update user's last seen information with geo and device data"""
+        from datetime import datetime
+        update_data = {
+            "last_seen": datetime.now(),
+            "last_geo": geo or {},
+            "last_device": device_info or {}
+        }
+        self.users.update_one(
+            {"username": username}, 
+            {"$set": update_data}
+        )
+    
+    def get_user_purchase_history(self, username, limit=10):
+        """Get purchase history for a user including geo and device info"""
+        if not hasattr(self, 'purchases'):
+            self.purchases = self.db.purchases
+        
+        return list(self.purchases.find(
+            {"username": username}
+        ).sort("timestamp_requested", -1).limit(limit))
+    
+    def get_user_with_geo_device(self, username):
+        """Get user information including last geo and device data"""
+        return self.users.find_one({"username": username})
+    
+    # Query methods for retrieving all records
+    def get_all_merchants(self):
+        """Get all merchants in the database"""
+        return list(self.merchants.find())
+    
+    def get_all_users(self):
+        """Get all users with their geo and device information"""
+        return list(self.users.find())
+    
+    def get_all_cards(self):
+        """Get all card records"""
+        return list(self.cards.find())
+    
+    def get_all_purchases(self):
+        """Get all purchase records with geo and device info"""
+        if not hasattr(self, 'purchases'):
+            self.purchases = self.db.purchases
+        return list(self.purchases.find())
+    
+    def get_users_by_country(self, country):
+        """Get users by their last known country"""
+        return list(self.users.find({"last_geo.country": country}))
+    
+    def get_purchases_by_date_range(self, start_date, end_date):
+        """Get purchases within a date range"""
+        if not hasattr(self, 'purchases'):
+            self.purchases = self.db.purchases
+        return list(self.purchases.find({
+            "timestamp_requested": {
+                "$gte": start_date,
+                "$lte": end_date
+            }
+        }))
+    
+    def get_purchases_by_ip(self, ip_address):
+        """Get purchases made from a specific IP address"""
+        if not hasattr(self, 'purchases'):
+            self.purchases = self.db.purchases
+        return list(self.purchases.find({"geo.ip": ip_address}))
+    
+    def get_high_amount_purchases(self, threshold=1000):
+        """Get purchases above a certain amount threshold"""
+        if not hasattr(self, 'purchases'):
+            self.purchases = self.db.purchases
+        return list(self.purchases.find({"amount": {"$gte": threshold}}))
+    
+    def get_mfa_required_purchases(self):
+        """Get all purchases that required MFA"""
+        if not hasattr(self, 'purchases'):
+            self.purchases = self.db.purchases
+        return list(self.purchases.find({"mfa_required": True}))
+    
+    def get_database_stats(self):
+        """Get statistics about all collections"""
+        stats = {}
+        try:
+            stats['merchants_count'] = self.merchants.count_documents({})
+            stats['users_count'] = self.users.count_documents({})
+            stats['cards_count'] = self.cards.count_documents({})
+            if hasattr(self, 'purchases'):
+                stats['purchases_count'] = self.purchases.count_documents({})
+            else:
+                self.purchases = self.db.purchases
+                stats['purchases_count'] = self.purchases.count_documents({})
+        except Exception as e:
+            print(f"Error getting database stats: {e}")
+            stats['error'] = str(e)
+        return stats
     
 if __name__ == "__main__":
     db = Database()
