@@ -19,6 +19,7 @@ const App: React.FC = () => {
 
   const [mfaRequired, setMfaRequired] = useState(false); // Track MFA requirement
   const [mfaPending, setMfaPending] = useState(false); // Show spinner overlay while starting MFA
+  const [mfaSelection, setMfaSelection] = useState<{ method: string; device: any } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -42,15 +43,21 @@ const App: React.FC = () => {
 
       // Delegate MFA logic to startMFA helper
       const result = await startMFA(payload);
+      console.log('MFA result:', result);
+
+      // If user selected a method/device, store it and set MFA required
+      if (result && result.selection) {
+        setMfaSelection(result.selection);
+        setMfaRequired(true);
+        console.log('User selected method:', result.selection.method, 'device:', result.selection.device);
+      } else {
+        // No selection -> leave as-is or handle direct success
+        setMfaSelection(null);
+        setMfaRequired(false);
+      }
 
       setMfaPending(false);
 
-      if (result.data && result.data.mfa_required) {
-        setMfaRequired(true);
-      } else {
-        setMfaRequired(false);
-        console.log('Authentication successful.');
-      }
     } catch (error) {
       setMfaPending(false);
       console.error('Error:', error);
@@ -135,6 +142,13 @@ const App: React.FC = () => {
         <CardDetailsForm formData={formData} onChange={handleChange} />
         <CheckoutButton amount={formData.amount} disabled={mfaRequired} />
       </form>
+
+      {mfaSelection && (
+        <div style={{ marginTop: 12, textAlign: 'center' }}>
+          <strong>MFA Method:</strong> {mfaSelection.method} <br />
+          <strong>Device:</strong> {mfaSelection.device?.display_name || mfaSelection.device?.name || mfaSelection.device?.number}
+        </div>
+      )}
     </div>
   );
 };

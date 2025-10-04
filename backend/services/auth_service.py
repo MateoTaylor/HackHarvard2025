@@ -115,6 +115,7 @@ def initialize_challenge_service(request):
             if data.get('cardNumber'):
                 username = db.get_user_via_card(data.get('cardNumber'))
                 if username:
+                    print("Found user for card:", username)
                     response["reason"] = reason
                     response["auth_method"] = get_auth_method(username)
                 else:
@@ -123,8 +124,8 @@ def initialize_challenge_service(request):
             else:
                 response["reason"] = "No card information provided"
 
-        logger.info(f"Challenge initialized: {challenge_id}, MFA required: {mfa_required}")
-
+        print("response:", response)
+        print("Initialized challenge:", challenge_info)  # Debug print
         return jsonify(response), 200
 
     except ValueError as e:
@@ -132,19 +133,6 @@ def initialize_challenge_service(request):
     except Exception as e:
         logger.error(f"Error initializing challenge: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
-
-def run_duo_auth(challenge_id, username):
-    """
-    Initiate Duo authentication for the given challenge and user.
-
-    Args:
-        challenge_id (str): The unique identifier for the challenge.
-        username (str): The username of the user to authenticate.
-
-    """
-    # TODO: Implement Duo authentication logic
-    pass
-
 
 def verify_challenge_service(request):
     """

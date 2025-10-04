@@ -99,7 +99,7 @@ class Database:
             "card_info": card_info,
             "previous_purchases": []
         }
-        self.users.insert_one(user)
+        result = self.users.insert_one(user)
         return user
     
     def create_card(self, card_info, user_id):
@@ -113,10 +113,12 @@ class Database:
     
     def get_user_via_card(self, card_info):
         """Retrieve a user by card info"""
-        card = self.cards.find_one({"card_info": card_info})
+        print("Looking up user for card:", card_info)
+        print("Cards collection contents:", list(self.cards.find()))
+        card = self.cards.find_one({"card_info": str(card_info)})
         if card:
             user_id = card["user_id"]
-            return self.users.find_one({"_id": user_id})
+            return user_id
         return None
     
 if __name__ == "__main__":
