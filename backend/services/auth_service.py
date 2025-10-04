@@ -131,6 +131,7 @@ def initialize_challenge_service(request):
                 username = db.get_user_via_card(data.get('cardNumber'))
                 if username:
                     print("Found user for card:", username)
+                    response["username"] = username
                     DuoAuth = DuoAuthAPIService()
                     response["reason"] = reason
                     response["auth_method"] = DuoAuth.preauth(username)
@@ -261,14 +262,15 @@ def send_mfa_request_service(request):
         
         method = data['method']
         username = data['username']
+        passcode = data.get('passcode')  # Optional passcode for SMS verification
         
-        logger.info(f"Sending MFA request - Method: {method}, Username: {username}")
+        logger.info(f"Sending MFA request - Method: {method}, Username: {username}, Passcode: {'***' if passcode else 'None'}")
         
         # Initialize Duo Auth API service
         duo_service = DuoAuthAPIService()
         
         # Send auth request using Duo
-        auth_response = duo_service.send_auth_request(username=username, factor=method)
+        auth_response = duo_service.send_auth_request(username=username, factor=method, passcode=passcode)
         
         logger.info(f"Duo auth response: {auth_response}")
         
@@ -276,6 +278,7 @@ def send_mfa_request_service(request):
             "success": True,
             "method": method,
             "username": username,
+            "passcode_provided": bool(passcode),
             "duo_response": auth_response
         }), 200
         
