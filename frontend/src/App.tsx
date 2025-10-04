@@ -15,7 +15,7 @@ const App: React.FC = () => {
     address: '',
   });
 
-  const [showPayButton, setShowPayButton] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false); // Track MFA requirement
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,22 +37,16 @@ const App: React.FC = () => {
       const data = await response.json();
       console.log('Response:', data);
 
-      // Check if authentication failed
-      if (data === false || data.success === false) {
-        // Show authentication failed popup
-        alert('Authentication failed. Please try again.');
-        // Show the pay button
-        setShowPayButton(true);
+      if (data.mfa_required) {
+        setMfaRequired(true); // Set MFA required state
+        console.log('Authentication required. Please complete MFA.');
       } else {
-        // Authentication successful
-        console.log('Authentication successful');
-        setShowPayButton(false);
+        setMfaRequired(false); // Clear MFA required state
+        console.log('Authentication successful.');
       }
     } catch (error) {
       console.error('Error:', error);
-      // Show authentication failed popup on error
       alert('Authentication failed. Please try again.');
-      setShowPayButton(true);
     }
   };
 
@@ -130,32 +124,8 @@ const App: React.FC = () => {
         }}
       >
         <CardDetailsForm formData={formData} onChange={handleChange} />
-        <CheckoutButton amount={formData.amount} />
+        <CheckoutButton amount={formData.amount} disabled={mfaRequired} />
       </form>
-      
-      {showPayButton && (
-        <button
-          type="button"
-          style={{
-            marginTop: '20px',
-            padding: '12px 30px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            fontSize: '16px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-          }}
-          onClick={() => {
-            // Handle payment processing here
-            console.log('Processing payment...');
-            alert('Processing payment...');
-          }}
-        >
-          Pay ${formData.amount}
-        </button>
-      )}
     </div>
   );
 };
