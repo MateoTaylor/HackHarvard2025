@@ -11,8 +11,19 @@ active_challenges = {}
 # Constants
 CHALLENGE_EXPIRY_MINUTES = 15
 SUPPORTED_CURRENCIES = ["USD", "EUR", "GBP"]
-MFA_AMOUNT_THRESHOLD = 100  # Amount above which MFA is required
 HIGH_RISK_COUNTRIES = ["NG", "PK", "IR"]
+
+# Default values for missing fields in requests
+DEFAULT_MERCHANT_ID = "demo_merchant"
+DEFAULT_API_KEY = "sk_test_demo_key_12345"
+DEFAULT_CURRENCY = "USD"
+DEFAULT_EMAIL = "user@example.com"
+
+# Thresholds
+AMOUNT_THRESHOLD = {
+    "mfa_required": 100,  # Amount above which MFA is required
+    "high_amount": 1000  # Amount above which transactions are considered too high
+}
 
 # Logger setup
 import logging

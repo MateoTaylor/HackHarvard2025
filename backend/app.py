@@ -35,14 +35,16 @@ Future Extensions:
 
 from flask import Flask
 from flask_cors import CORS
+from routes.root_routes import root_routes
 from routes.auth_routes import auth_routes
-from config import MERCHANT_API_KEYS, active_challenges, CHALLENGE_EXPIRY_MINUTES, SUPPORTED_CURRENCIES, MFA_AMOUNT_THRESHOLD, HIGH_RISK_COUNTRIES, logger
+from config import MERCHANT_API_KEYS, active_challenges, CHALLENGE_EXPIRY_MINUTES, SUPPORTED_CURRENCIES, AMOUNT_THRESHOLD, HIGH_RISK_COUNTRIES, logger
 
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Register Blueprints
+app.register_blueprint(root_routes) 
 app.register_blueprint(auth_routes)
 
 if __name__ == "__main__":

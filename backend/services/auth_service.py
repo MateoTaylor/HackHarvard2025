@@ -4,6 +4,7 @@ from flask import jsonify
 from services.validation_service import validate_merchant_api_key, should_require_mfa
 from services.auth_methods import get_auth_method
 from config import active_challenges, CHALLENGE_EXPIRY_MINUTES, SUPPORTED_CURRENCIES, logger
+from config import DEFAULT_MERCHANT_ID, DEFAULT_API_KEY, DEFAULT_CURRENCY, DEFAULT_EMAIL, AMOUNT_THRESHOLD
 
 def initialize_challenge_service(request):
     """
@@ -31,6 +32,12 @@ def initialize_challenge_service(request):
     try:
         data = request.get_json()
 
+        # Fill in default values for missing fields
+        data['merchant_id'] = data.get('merchant_id', DEFAULT_MERCHANT_ID)
+        data['api_key'] = data.get('api_key', DEFAULT_API_KEY)
+        data['currency'] = data.get('currency', DEFAULT_CURRENCY)
+        data['email'] = data.get('email', DEFAULT_EMAIL)
+
         # Validate required fields
         required_fields = ['merchant_id', 'api_key', 'amount', 'currency', 'email']
         missing_fields = [field for field in required_fields if not data.get(field)]
@@ -55,6 +62,13 @@ def initialize_challenge_service(request):
             return jsonify({
                 "error": "Unsupported currency",
                 "supported_currencies": SUPPORTED_CURRENCIES
+            }), 400
+
+        # Check if the amount is too high
+        if float(data['amount']) > AMOUNT_THRESHOLD["high_amount"]:
+            return jsonify({
+                "error": "Amount exceeds the allowed threshold",
+                "threshold": AMOUNT_THRESHOLD["high_amount"]
             }), 400
 
         # Determine if MFA is required

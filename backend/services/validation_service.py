@@ -1,4 +1,4 @@
-from config import MERCHANT_API_KEYS, MFA_AMOUNT_THRESHOLD, HIGH_RISK_COUNTRIES
+from config import MERCHANT_API_KEYS, AMOUNT_THRESHOLD, HIGH_RISK_COUNTRIES
 
 def validate_merchant_api_key(merchant_id, api_key):
     """
@@ -39,7 +39,7 @@ def should_require_mfa(amount, currency, geo, device_info, email):
         - Future extensions may include machine learning and advanced risk scoring.
     """
     # Rule 1: High amount transactions
-    if amount >= MFA_AMOUNT_THRESHOLD:
+    if amount >= AMOUNT_THRESHOLD["mfa_required"]:
         return True, "high_amount"
 
     # Rule 3: High-risk countries
