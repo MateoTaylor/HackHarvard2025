@@ -6,6 +6,7 @@ from services.auth_methods import get_auth_method
 from config import active_challenges, CHALLENGE_EXPIRY_MINUTES, SUPPORTED_CURRENCIES, logger
 from config import DEFAULT_MERCHANT_ID, DEFAULT_API_KEY, DEFAULT_CURRENCY, DEFAULT_EMAIL, AMOUNT_THRESHOLD
 from services.auth_duo import DuoAuthService
+from services.database import Database
 
 def initialize_challenge_service(request):
     """
@@ -109,12 +110,18 @@ def initialize_challenge_service(request):
             "expires_in_seconds": CHALLENGE_EXPIRY_MINUTES * 60
         }
         if mfa_required:
-            duo_service = DuoAuthService()
-            response["duo_auth_url"] = duo_service.create_auth_url("sushmit") 
-             # currently hardcoding username, TODO: fetch from DB based on email    
-            response["reason"] = reason
-        else:
-            response["duo_auth_url"] = None
+            # first try to access the card in the database to see if MFA exists for it
+            db = Database()
+            if data.get('cardNumber'):
+                username = db.get_user_via_card(data.get('cardNumber'))
+                if username:
+                    response["reason"] = reason
+                    response["auth_method"] = get_auth_method(username)
+                else:
+                    response["reason"] = "Card not attached to a user"
+                    response["auth_method"] = None
+            else:
+                response["reason"] = "No card information provided"
 
         logger.info(f"Challenge initialized: {challenge_id}, MFA required: {mfa_required}")
 
@@ -125,6 +132,19 @@ def initialize_challenge_service(request):
     except Exception as e:
         logger.error(f"Error initializing challenge: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
+def run_duo_auth(challenge_id, username):
+    """
+    Initiate Duo authentication for the given challenge and user.
+
+    Args:
+        challenge_id (str): The unique identifier for the challenge.
+        username (str): The username of the user to authenticate.
+
+    """
+    # TODO: Implement Duo authentication logic
+    pass
+
 
 def verify_challenge_service(request):
     """

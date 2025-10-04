@@ -12,8 +12,6 @@ Merchant:
 User:
 - user_id (str): Unique identifier for the user.
 - email (str): User's email address.
-- phone (str): User's phone number.
-- registered_devices (list): List of registered devices for MFA.
 - previous purchases (list): List of previous purchase records.
 
 Purchase Record (last 6 months):
@@ -32,4 +30,98 @@ Purchase Record (last 6 months):
 
 '''
 
+import os
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+class Database:
+    def __init__(self):
+        # For Atlas, you need to set MONGODB_URI environment variable
+        # Example: mongodb+srv://username:password@cluster.mongodb.net/database
+        load_dotenv()  # This will look for .env in current directory and parent directories
+        mongo_uri = os.getenv("MONGODB_URI")
+        if not mongo_uri:
+            print("Error: MONGODB_URI environment variable not set!")
+            print("For Atlas: Set MONGODB_URI to your Atlas connection string")
+            print("For local: Set MONGODB_URI to mongodb://localhost:27017")
+            self.client = None
+            self.db = None
+            self.merchants = None
+            self.users = None
+            self.cards = None
+            return
+        
+        try:
+            self.client = MongoClient(
+                mongo_uri,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                socketTimeoutMS=5000,
+            )
+            
+            # Test the connection
+            self.client.admin.command("ping")
+            print("MongoDB connection successful!")
+        except Exception as e:
+            print(f"MongoDB connection failed: {e}")
+            self.client = None
+            self.db = None
+            self.merchants = None
+            self.users = None
+            self.cards = None
+            return
+        self.db = self.client.authpay_db
+
+        self.merchants = self.db.merchants
+        self.users = self.db.users
+        self.cards = self.db.cards
+
+    def create_merchant(self, merchant_id, api_key, currency, email):
+        """Create a new merchant record"""
+        merchant = {
+            "merchant_id": merchant_id,
+            "api_key": api_key,
+            "currency": currency,
+            "email": email
+        }
+        self.merchants.insert_one(merchant)
+        return merchant
+
+    def get_merchant(self, merchant_id):
+        """Retrieve a merchant by ID"""
+        return self.merchants.find_one({"merchant_id": merchant_id})
+    
+    def create_user(self, username, email, card_info):
+        """Create a new user record"""
+        user = {
+            "username": username,
+            "email": email,
+            "card_info": card_info,
+            "previous_purchases": []
+        }
+        self.users.insert_one(user)
+        return user
+    
+    def create_card(self, card_info, user_id):
+        """Create a new card record"""
+        card = {
+            "card_info": card_info,
+            "user_id": user_id
+        }
+        self.cards.insert_one(card)
+        return card
+    
+    def get_user_via_card(self, card_info):
+        """Retrieve a user by card info"""
+        card = self.cards.find_one({"card_info": card_info})
+        if card:
+            user_id = card["user_id"]
+            return self.users.find_one({"_id": user_id})
+        return None
+    
+if __name__ == "__main__":
+    db = Database()
+    # Example usage
+    merchant = db.create_merchant("merchant_123", "api_key_abc", "USD", "merchant@example.com")
+    user = db.create_user("testuser", "testuser@gmail.com", "1234")
+    card = db.create_card("1234", "testuser")
