@@ -8,6 +8,41 @@ import MFASMSPopup from './MFA_sms_popup';
 // and handles Duo redirect when needed. Designed to be imported by any app.
 
 export type MFASelection = { method: string; device: any } | null;
+
+// Helper function to parse Duo auth success from backend response
+function parseAuthSuccess(backendResponse: any): boolean {
+    // Check if the backend call was successful
+    if (!backendResponse?.success) {
+        return false;
+    }
+    
+    // Parse the Duo API response
+    const duoResponse = backendResponse?.duo_response;
+    if (!duoResponse) {
+        return false;
+    }
+    
+    // Duo Auth API success indicators
+    // Common success values: "allow", "success", or specific status codes
+    if (duoResponse.result === 'allow' || duoResponse.result === 'success') {
+        return true;
+    }
+    
+    // Some Duo responses may use 'status' field
+    if (duoResponse.status === 'OK' || duoResponse.status === 'allow') {
+        return true;
+    }
+    
+    // For passcode verification, check if result is positive
+    if (duoResponse.status_msg && duoResponse.status_msg.toLowerCase().includes('success')) {
+        return true;
+    }
+    
+    // Default to false if no clear success indicator
+    console.warn('Uncertain Duo response format:', duoResponse);
+    return false;
+}
+
 export async function startMFA(payload: Record<string, any>, options?: { endpoint?: string; sendEndpoint?: string }) {
     const endpoint = options?.endpoint || 'http://localhost:5001/authpay/init';
 
@@ -52,7 +87,7 @@ export async function startMFA(payload: Record<string, any>, options?: { endpoin
                         // Step 2: Show passcode popup
                         const passcode = await showSMSPasscodePopup(selection.device);
                         if (!passcode) {
-                            return { redirected: false, data, selection, smsResult: smsData, cancelled: true };
+                            return { redirected: false, data, selection, smsResult: smsData, cancelled: true, success: false };
                         }
                         
                         // Step 3: Send passcode verification
@@ -69,10 +104,20 @@ export async function startMFA(payload: Record<string, any>, options?: { endpoin
                         const verifyData = await verifyRes.json();
                         console.log('SMS verify response:', verifyData);
                         
-                        return { redirected: false, data, selection, smsResult: smsData, verifyResult: verifyData };
+                        // Parse success from Duo response
+                        const success = parseAuthSuccess(verifyData);
+                        
+                        return { 
+                            redirected: false, 
+                            data, 
+                            selection, 
+                            smsResult: smsData, 
+                            verifyResult: verifyData,
+                            success: success
+                        };
                     } catch (smsErr) {
                         console.error('Error in SMS flow:', smsErr);
-                        return { redirected: false, data, selection, smsError: smsErr };
+                        return { redirected: false, data, selection, smsError: smsErr, success: false };
                     }
                 } else {
                     // For other methods: direct auth
@@ -89,18 +134,33 @@ export async function startMFA(payload: Record<string, any>, options?: { endpoin
                         const sendData = await sendRes.json();
                         console.log('MFA send response:', sendData);
                         
-                        return { redirected: false, data, selection, sendResult: sendData };
+                        // Parse success from Duo response
+                        const success = parseAuthSuccess(sendData);
+                        
+                        return { 
+                            redirected: false, 
+                            data, 
+                            selection, 
+                            sendResult: sendData,
+                            success: success
+                        };
                     } catch (sendErr) {
                         console.error('Error sending MFA request:', sendErr);
-                        return { redirected: false, data, selection, sendError: sendErr };
+                        return { redirected: false, data, selection, sendError: sendErr, success: false };
                     }
                 }
             }
-            return { redirected: false, data, selection };
+            return { redirected: false, data, selection, success: false };
+        }
+
+        // If MFA is not required, return success immediately
+        if (data && !data.mfa_required) {
+            console.log('✅ No MFA required - transaction approved');
+            return { redirected: false, data, selection: null, success: true };
         }
 
         // Otherwise return the response so caller can handle
-        return { redirected: false, data, selection: null };
+        return { redirected: false, data, selection: null, success: data?.success || false };
     } catch (err) {
         console.error('MFA start error:', err);
         throw err;

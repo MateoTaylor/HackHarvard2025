@@ -127,6 +127,10 @@ class Database:
 if __name__ == "__main__":
     db = Database()
     # Example usage
-    merchant = db.create_merchant("merchant_123", "api_key_abc", "USD", "merchant@example.com")
-    user = db.create_user("testuser", "testuser@gmail.com", "1234")
-    card = db.create_card("1234", "testuser")
+    # merchant = db.create_merchant("merchant_123", "api_key_abc", "USD", "merchant@example.com")
+    # user = db.create_user("testuser", "testuser@gmail.com", "1234")
+    # card = db.create_card("1234", "testuser")
+    # jorge_user = db.create_user("sushmituser", "sushmituser@gmail.com", "1111")
+    # jorge_card = db.create_card("1111", "sushmituser")
+    # Print all cards in the database
+    all_cards = list(db.cards.find())

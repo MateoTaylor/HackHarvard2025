@@ -89,7 +89,7 @@ if __name__ == "__main__":
         print(f"Initialization failed: {e}")
 
     # Example usage
-    response = duo_auth.enroll_user("ekinuser", "ekinuser@gmail.com")
+    response = duo_auth.enroll_user("sushmituser", "sushmituser@gmail.com")
     print("Enroll response:", response)
     # testing_user = "testuser"
     # testing_email = "testemail@gmail.com"
