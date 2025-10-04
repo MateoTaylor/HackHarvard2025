@@ -1,0 +1,9 @@
+# Python version: 3.13.7
+# This project requires Python 3.13.7 or compatible version
+
+# Flask web framework
+Flask==3.0.0
+# CORS support for cross-origin requests
+Flask-Cors==4.0.0
+# Testing framework
+pytest
