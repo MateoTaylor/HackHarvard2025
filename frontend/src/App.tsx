@@ -14,7 +14,6 @@ const App: React.FC = () => {
     lastName: '',
     address: '',
   });
-  const [responseMessage, setResponseMessage] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,10 +34,8 @@ const App: React.FC = () => {
 
       const data = await response.json();
       console.log('Response:', data);
-      setResponseMessage(JSON.stringify(data, null, 2)); // Display the response
     } catch (error) {
       console.error('Error:', error);
-      setResponseMessage('Failed to send request.');
     }
   };
 
@@ -118,28 +115,6 @@ const App: React.FC = () => {
         <CardDetailsForm formData={formData} onChange={handleChange} />
         <CheckoutButton amount={formData.amount} />
       </form>
-      {responseMessage && (
-        <div
-          style={{
-            marginTop: '20px',
-            padding: '10px',
-            border: '1px solid #ccc',
-            borderRadius: '5px',
-            backgroundColor: '#f9f9f9',
-            width: '100%',
-          }}
-        >
-          <h2>Response:</h2>
-          <pre
-            style={{
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word',
-            }}
-          >
-            {responseMessage}
-          </pre>
-        </div>
-      )}
     </div>
   );
 };
