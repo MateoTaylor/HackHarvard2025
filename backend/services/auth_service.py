@@ -5,6 +5,7 @@ from services.validation_service import validate_merchant_api_key, should_requir
 from services.auth_methods import get_auth_method
 from config import active_challenges, CHALLENGE_EXPIRY_MINUTES, SUPPORTED_CURRENCIES, logger
 from config import DEFAULT_MERCHANT_ID, DEFAULT_API_KEY, DEFAULT_CURRENCY, DEFAULT_EMAIL, AMOUNT_THRESHOLD
+from services.auth_duo import DuoAuthService
 
 def initialize_challenge_service(request):
     """
@@ -107,15 +108,13 @@ def initialize_challenge_service(request):
             "mfa_required": mfa_required,
             "expires_in_seconds": CHALLENGE_EXPIRY_MINUTES * 60
         }
-
-        # Determine the authentication method
-        auth_method = get_auth_method("webauthn")
-
         if mfa_required:
-            response["method"] = auth_method  # Future: support multiple methods
+            duo_service = DuoAuthService()
+            response["duo_auth_url"] = duo_service.create_auth_url("sushmit") 
+             # currently hardcoding username, TODO: fetch from DB based on email    
             response["reason"] = reason
         else:
-            response["method"] = None
+            response["duo_auth_url"] = None
 
         logger.info(f"Challenge initialized: {challenge_id}, MFA required: {mfa_required}")
 
