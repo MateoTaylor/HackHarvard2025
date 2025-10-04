@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import uuid
 from flask import jsonify
 from services.validation_service import validate_merchant_api_key, should_require_mfa
+from services.auth_methods import get_auth_method
 from config import active_challenges, CHALLENGE_EXPIRY_MINUTES, SUPPORTED_CURRENCIES, logger
 
 def initialize_challenge_service(request):
@@ -93,8 +94,11 @@ def initialize_challenge_service(request):
             "expires_in_seconds": CHALLENGE_EXPIRY_MINUTES * 60
         }
 
+        # Determine the authentication method
+        auth_method = get_auth_method("webauthn")
+
         if mfa_required:
-            response["method"] = "webauthn"  # Future: support multiple methods
+            response["method"] = auth_method  # Future: support multiple methods
             response["reason"] = reason
         else:
             response["method"] = None
