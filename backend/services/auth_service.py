@@ -137,6 +137,7 @@ def initialize_challenge_service(request):
                     response["auth_method"] = DuoAuth.preauth(username)
                 else:
                     response["reason"] = "Card not attached to a user"
+                    response["mfa_required"] = False
                     response["auth_method"] = None
             else:
                 response["reason"] = "No card information provided"
