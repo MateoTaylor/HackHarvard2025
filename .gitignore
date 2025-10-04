@@ -16,3 +16,9 @@ venv/
 
 # Logs and temporary files
 *.log
+
+
+node_modules/
+package-lock.json
+../node_modules/
+../package-lock.json
