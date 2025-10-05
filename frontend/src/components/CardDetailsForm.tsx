@@ -85,6 +85,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
           placeholder="John"
           value={formData.firstName}
           onChange={onChange}
+          autoComplete="off"
           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
       </div>
@@ -98,6 +99,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
           value={formData.cardNumber}
           onChange={handleFormattedChange}
           maxLength={19} // 16 digits + 3 spaces
+          autoComplete="off"
           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
       </div>
@@ -112,6 +114,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
             value={formData.expiryDate}
             onChange={handleFormattedChange}
             maxLength={5} // MM/YY format
+            autoComplete="off"
             style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
           />
         </div>
@@ -125,6 +128,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
             value={formData.cvv}
             onChange={handleFormattedChange}
             maxLength={3} // 3 digits max
+            autoComplete="off"
             style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
           />
         </div>
@@ -138,6 +142,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
           placeholder="user@example.com"
           value={formData.email}
           onChange={onChange}
+          autoComplete="off"
           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
       </div>
@@ -151,6 +156,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
           value={formData.address}
           onChange={handleFormattedChange}
           maxLength={5} // 5 digits max
+          autoComplete="off"
           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
       </div>

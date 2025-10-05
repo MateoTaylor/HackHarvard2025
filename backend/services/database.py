@@ -179,13 +179,34 @@ class Database:
         """Get user information including last geo and device data"""
         return self.users.find_one({"username": username})
     
+    def delete_card(self, card_info):
+        """Delete a card record by card info"""
+        result = self.cards.delete_one({"card_info": str(card_info)})
+        return result.deleted_count > 0
+
+    def delete_user(self, username):
+        """Delete a user record by username"""
+        result = self.users.delete_one({"username": str(username)})
+        return result.deleted_count > 0
+
+    
 if __name__ == "__main__":
     db = Database()
     # Example usage
     # merchant = db.create_merchant("merchant_123", "api_key_abc", "USD", "merchant@example.com")
     # user = db.create_user("testuser", "testuser@gmail.com", "1234")
     # card = db.create_card("1234", "testuser")
+    
+    # To delete a card, you can add this method to the Database class:
+    
+    # Example usage:
+    # db.delete_card("1234")  # This would delete the card with card_info "1234"
+
     # jorge_user = db.create_user("sushmituser", "sushmituser@gmail.com", "1111")
-    # jorge_card = db.create_card("1111", "sushmituser")
+    jorge_card = db.create_card("4242424242424242", "sushmituser")
     # Print all cards in the database
-    all_cards = list(db.cards.find())
+    # delete_success = db.delete_card("5555555555554444")
+    # print(f"Card deletion successful: {delete_success}")
+    print("All cards in database:")
+    for card in db.cards.find():
+        print(card)
