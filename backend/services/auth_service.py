@@ -203,47 +203,19 @@ def initialize_challenge_service(request):
                     response["reason"] = reason
                     response["auth_method"] = DuoAuth.preauth(username)
                 else:
-                    # Card not found - create new user and card record
-                    logger.info("Card not found in database. Creating new user and card record.")
+                    # Card not found in database - don't create new records
+                    # Just skip MFA for unknown cards and proceed with transaction
+                    logger.info("Card not found in database. Skipping MFA for unknown card.")
                     
-                    # Create username from firstName, fallback to default if empty
-                    new_username = data.get('firstName', '').strip()
-                    if not new_username:
-                        new_username = f"user_{data.get('cardNumber', 'unknown')[-4:]}"  # Use last 4 digits
+                    # Update the challenge to not require MFA since user is unknown
+                    challenge_info["mfa_required"] = False
+                    challenge_info["reason"] = "Unknown card - MFA skipped"
+                    active_challenges[challenge_id] = challenge_info
                     
-                    # Use provided email or default
-                    email = data.get('email', DEFAULT_EMAIL)
-                    card_number = data.get('cardNumber')
-                    
-                    try:
-                        # Create user record with geo and device info
-                        user = db.create_user(new_username, email, card_number, 
-                                            data.get('geo', {}), data.get('device', {}))
-                        logger.info(f"Created user: {new_username}")
-                        
-                        # Create card record linking card to user
-                        card = db.create_card(card_number, new_username)
-                        logger.info(f"Created card record for user: {new_username}")
-                        
-                        # Update user's last seen info with current geo and device
-                        db.update_user_last_seen(new_username, data.get('geo', {}), data.get('device', {}))
-                        
-                        # Update purchase record with username
-                        db.purchases.update_one(
-                            {"purchase_id": challenge_id},
-                            {"$set": {"username": new_username}}
-                        )
-                        
-                        # Now proceed with MFA for the new user
-                        response["username"] = new_username
-                        DuoAuth = DuoAuthAPIService()
-                        response["reason"] = reason
-                        response["auth_method"] = DuoAuth.preauth(new_username)
-                        
-                    except Exception as create_error:
-                        logger.error(f"Error creating user/card: {create_error}")
-                        response["reason"] = "Failed to create user record"
-                        response["auth_method"] = None
+                    # Update response to reflect no MFA required
+                    response["mfa_required"] = False
+                    response["reason"] = "Unknown card - MFA not required"
+                    response["auth_method"] = None
             else:
                 response["reason"] = "No card information provided"
 
