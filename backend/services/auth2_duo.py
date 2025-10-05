@@ -71,12 +71,21 @@ class DuoAuthAPIService:
         
     def send_auth_request(self, username, factor, passcode=None):
         ''' Send an authentication request to the user'''
-        response = self.auth_api.auth(
-            username=username,
-            factor=factor,
-            device="auto",
-            passcode=passcode
-        )
+        # For passcode verification, device parameter is not allowed (mutually exclusive)
+        if factor == "passcode":
+            response = self.auth_api.auth(
+                username=username,
+                factor=factor,
+                passcode=passcode
+            )
+        else:
+            # For other factors (push, sms, phone), use device="auto"
+            response = self.auth_api.auth(
+                username=username,
+                factor=factor,
+                device="auto",
+                passcode=passcode
+            )
         return response
     
 
@@ -89,19 +98,19 @@ if __name__ == "__main__":
         print(f"Initialization failed: {e}")
 
     # Example usage
-    response = duo_auth.enroll_user("sushmituser", "sushmituser@gmail.com")
-    print("Enroll response:", response)
-    # testing_user = "testuser"
-    # testing_email = "testemail@gmail.com"
+    # response = duo_auth.enroll_user("sushmituser", "sushmituser@gmail.com")
+    # print("Enroll response:", response)
+    testing_user = "testuser"
+    testing_email = "testemail@gmail.com"
 
-    # try:
-    #     preauth_response = duo_auth.preauth(testing_user)
-    #     print("Preauth response:", preauth_response)
-    # except ValueError as e:
-    #     print(f"Preauth failed: {e}")
+    try:
+        preauth_response = duo_auth.preauth(testing_user)
+        # print("Preauth response:", preauth_response)
+    except ValueError as e:
+        print(f"Preauth failed: {e}")
 
-    # try:
-    #     auth_response = duo_auth.send_auth_request(testing_user, factor="push")
-    #     print("Auth request response:", auth_response)
-    # except ValueError as e:
-    #     print(f"Auth request failed: {e}")
+    try:
+        auth_response = duo_auth.send_auth_request(testing_user, factor="phone")
+        print("Auth request response:", auth_response)
+    except ValueError as e:
+        print(f"Auth request failed: {e}")

