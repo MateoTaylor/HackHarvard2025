@@ -44,11 +44,23 @@ export default function MFAOptionsPopup({
         >
           ×
         </button>
+
         <h2 className="mfa-title" style={{
           color: '#111827',
-          marginBottom: '8px'
+          marginBottom: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px'
         }}>
-          Verify your identity
+          <span>Verify your identity</span>
+          <img
+            src="/crop_logo.png"
+            alt="Crop Logo"
+            style={{
+              height: '24px',
+              objectFit: 'contain'
+            }}
+          />
         </h2>
         <p className="mfa-sub" style={{
           color: '#6B7280',
