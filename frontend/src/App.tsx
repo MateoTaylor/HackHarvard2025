@@ -153,7 +153,7 @@ const App: React.FC = () => {
               marginRight: '20px',
               letterSpacing: '-0.5px'
             }}>
-              amazon.ca
+              Amazonia.ma
             </div>
             <div style={{
               color: '#FFFFFF',
