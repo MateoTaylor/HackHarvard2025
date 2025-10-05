@@ -1,7 +1,7 @@
-# TruelyPay - Secure MFA Payment Authentication
-
 **HackHarvard 2025 | Cambridge, Massachusetts**  
-*36 Hours of Innovation • Visa Trust & Transparency Track*
+_36 Hours of Innovation • Visa Trust & Transparency Track_
+
+# TruelyPay - Secure MFA Payment Authentication
 
 ---
 
@@ -10,9 +10,10 @@
 A universal MFA verification layer for secure payments with intelligent risk assessment and seamless merchant integration.
 
 **Key Features:**
+
 - Smart MFA triggers (amount, location, device, behavior)
 - Multiple auth methods (SMS, Email, Duo Security)
-- 3-line code integration for merchants
+- ~3-line code integration for merchants
 - Real-time processing with MongoDB backend
 
 ## 🏗️ Architecture
@@ -27,7 +28,7 @@ A universal MFA verification layer for secure payments with intelligent risk ass
 # Backend
 cd backend && pip install -r requirements.txt && python3 app.py
 
-# Frontend  
+# Frontend
 cd frontend && npm install && npm run dev
 ```
 
@@ -38,13 +39,13 @@ Visit `http://localhost:5173` • Try amounts ≥$100 to trigger MFA
 Merchants can add TruelyPay MFA to their existing systems with just **3 lines of code**:
 
 ```typescript
-import { startMFA } from './components/MFA';
+import { startMFA } from "./components/MFA";
 
 const result = await startMFA({
   merchant_id: "your_merchant_id",
   api_key: "your_api_key",
   amount: paymentData.amount,
-  email: paymentData.email
+  email: paymentData.email,
 });
 
 if (result.success) {
@@ -68,12 +69,6 @@ if (result.success) {
 **Ekin Chakma** - Brandeis University, CS '27  
 **Sushmit Chakma** - Haverford College, CS '28
 
-## � HackHarvard 2025 Memories
-
-Built in **36 incredible hours** at Cambridge, Massachusetts! From late-night coding to breakthrough moments - a testament to teamwork and hackathon spirit.
-
-*Where trust meets technology, and transparency drives innovation.*
-
 ## 📚 Documentation
 
 - [Backend API](./backend/README.md) - Complete setup and API reference
@@ -85,4 +80,4 @@ Educational and development purposes only.
 
 ---
 
-*Built with ❤️ during HackHarvard 2025 | Creating the future of secure payments*
+_For the memories of these fun days and the creation the future of secure payments_
