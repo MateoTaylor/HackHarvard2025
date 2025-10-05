@@ -16,7 +16,7 @@ body {
   margin: 0; /* removed top margin so flex centering takes effect */
   background: #fff;
   border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
   padding: 20px;
 }
 
@@ -31,7 +31,9 @@ form {
   gap: 12px;
 }
 
-input[type="text"], input[type="email"], input[type="number"] {
+input[type="text"],
+input[type="email"],
+input[type="number"] {
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #e2e8f0;
@@ -66,7 +68,7 @@ button[disabled] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 2000;
 }
 
@@ -74,10 +76,10 @@ button[disabled] {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 6px solid rgba(255,255,255,0.2);
+  border: 6px solid rgba(255, 255, 255, 0.2);
   border-top-color: #fff;
   animation: spin 1s linear infinite;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
 }
 
 .mfa-message {
@@ -90,7 +92,7 @@ button[disabled] {
 .mfa-popup-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,7 +105,7 @@ button[disabled] {
   background: #fff;
   border-radius: 12px;
   padding: 22px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   position: relative;
 }
 
@@ -206,5 +208,7 @@ button[disabled] {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }

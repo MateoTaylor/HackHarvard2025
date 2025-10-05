@@ -75,8 +75,8 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
   };
 
   return (
-    <div style={{ textAlign: 'left' }}>
-      <div style={{ marginBottom: '15px' }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ marginRight: '15px', marginBottom: '15px' }}>
         <label htmlFor="firstName" style={{ display: 'block', marginBottom: '5px' }}>Name on card:</label>
         <input
           type="text"
@@ -89,7 +89,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
       </div>
-      <div style={{ marginBottom: '15px' }}>
+      <div style={{ marginRight: '15px', marginBottom: '15px' }}>
         <label htmlFor="cardNumber" style={{ display: 'block', marginBottom: '5px' }}>Card number:</label>
         <input
           type="text"
@@ -99,7 +99,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
           value={formData.cardNumber}
           onChange={handleFormattedChange}
           maxLength={19} // 16 digits + 3 spaces
-          autoComplete="off"
+          autoComplete="off" 
           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
       </div>
@@ -118,7 +118,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
             style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
           />
         </div>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, marginRight: '15px' }}>
           <label htmlFor="cvv" style={{ display: 'block', marginBottom: '5px' }}>Security code:</label>
           <input
             type="text"
@@ -133,7 +133,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
           />
         </div>
       </div>
-      <div style={{ marginBottom: '15px' }}>
+      <div style={{ marginRight: '15px', marginBottom: '15px' }}>
         <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>Email address:</label>
         <input
           type="email"
@@ -146,7 +146,7 @@ const CardDetailsForm: React.FC<CardDetailsFormProps> = ({ formData, onChange })
           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
       </div>
-      <div style={{ marginBottom: '15px' }}>
+      <div style={{ marginRight: '15px', marginBottom: '15px' }}>
         <label htmlFor="address" style={{ display: 'block', marginBottom: '5px' }}>ZIP/Postal code:</label>
         <input
           type="text"
