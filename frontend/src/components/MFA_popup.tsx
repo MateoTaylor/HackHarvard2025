@@ -105,7 +105,7 @@ export default function MFAOptionsPopup({
                         fontWeight: '500',
                         marginBottom: '4px'
                       }}>
-                        {method === 'push' ? "Jorge's Duo" : (top.display_name || top.display || top.name || top.number || top.device || 'Primary device')}
+                        {method === 'push' ? "Duo Push" : (top.display_name || top.display || top.name || top.number || top.device || 'Primary device')}
                       </div>
                     </div>
                   ) : (
