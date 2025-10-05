@@ -283,8 +283,8 @@ const App: React.FC = () => {
                 <div style={{
                   padding: '20px',
                   display: 'flex',
+                  justifyContent: 'center',
                   alignItems: 'center',
-                  gap: '12px',
                   borderBottom: '1px solid #F0F0F0'
                 }}>
                   <div style={{
@@ -316,7 +316,6 @@ const App: React.FC = () => {
                       style={{ width: '36px', height: '24px', objectFit: 'contain' }}
                     />
                   </div>
-                  <span style={{ fontSize: '13px', color: '#565959' }}>ending in ****</span>
                 </div>
 
                 <form
@@ -540,7 +539,7 @@ const App: React.FC = () => {
                   color: '#0F1111'
                 }}>
                   <span>Items:</span>
-                  <span style={{ fontWeight: '500' }}>CDN$ {parseFloat(formData.amount).toFixed(2)}</span>
+                  <span style={{ fontWeight: '500' }}> 1 {}</span>
                 </div>
 
                 <div style={{
@@ -551,7 +550,7 @@ const App: React.FC = () => {
                   color: '#0F1111'
                 }}>
                   <span>Shipping & Handling:</span>
-                  <span style={{ fontWeight: '500' }}>CDN$ 0.00</span>
+                  <span style={{ fontWeight: '500' }}>USD $15.00</span>
                 </div>
 
                 <div style={{
@@ -562,18 +561,7 @@ const App: React.FC = () => {
                   color: '#0F1111'
                 }}>
                   <span>Total before tax:</span>
-                  <span style={{ fontWeight: '500' }}>CDN$ {parseFloat(formData.amount).toFixed(2)}</span>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '14px',
-                  marginBottom: '10px',
-                  color: '#0F1111'
-                }}>
-                  <span>Estimated GST/HST:</span>
-                  <span style={{ fontWeight: '500' }}>CDN$ {(parseFloat(formData.amount) * 0.13).toFixed(2)}</span>
+                  <span style={{ fontWeight: '500' }}>USD ${parseFloat(formData.amount).toFixed(2)}</span>
                 </div>
 
                 <div style={{
@@ -584,7 +572,7 @@ const App: React.FC = () => {
                   color: '#0F1111'
                 }}>
                   <span>Estimated PST/RST/QST:</span>
-                  <span style={{ fontWeight: '500' }}>CDN$ 0.00</span>
+                  <span style={{ fontWeight: '500' }}>USD$ 7.00</span>
                 </div>
 
                 <hr style={{ 
@@ -601,7 +589,7 @@ const App: React.FC = () => {
                   color: '#B12704'
                 }}>
                   <span>Order Total:</span>
-                  <span>CDN$ {(parseFloat(formData.amount) * 1.13).toFixed(2)}</span>
+                  <span>USD$ {(parseFloat(formData.amount) + 15 + 7).toFixed(2)}</span>
                 </div>
               </div>
 
